@@ -79,7 +79,8 @@ namespace Microsoft.Framework.Runtime.Roslyn
 
                 EmitResult emitResult = null;
 
-                if (PlatformHelper.IsMono)
+                //diasmreader not working on CoreSystemServer yet: SET KRE_ROSLYN_EMIT_NOPDB=1
+                if ((PlatformHelper.IsMono) || (Environment.GetEnvironmentVariable("KRE_ROSLYN_EMIT_NOPDB") == "1"))
                 {
                     // Pdbs aren't supported on mono
                     emitResult = CompilationContext.Compilation.Emit(assemblyStream, manifestResources: resources);
@@ -146,7 +147,8 @@ namespace Microsoft.Framework.Runtime.Roslyn
 
                 EmitResult result = null;
 
-                if (PlatformHelper.IsMono)
+                //diasmreader not working on CoreSystemServer yet: SET KRE_ROSLYN_EMIT_NOPDB=1
+                if ((PlatformHelper.IsMono) || (Environment.GetEnvironmentVariable("KRE_ROSLYN_EMIT_NOPDB") == "1"))
                 {
                     // No pdb support yet
                     result = CompilationContext.Compilation.Emit(assemblyStream, outputName: Path.GetFileName(assemblyPath), pdbFilePath: null, pdbStream: null, xmlDocumentationStream: xmlDocStream, manifestResources: resources);
