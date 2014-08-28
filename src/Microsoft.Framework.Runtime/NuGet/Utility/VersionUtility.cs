@@ -136,6 +136,26 @@ namespace NuGet
                    frameworkName.Identifier == AspNetFrameworkIdentifier;
         }
 
+        public static bool IsCore45(FrameworkName targetFramework)
+        {
+            return string.Equals(targetFramework.Identifier, "K", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsAspNetCore(FrameworkName targetFramework)
+        {
+            return string.Equals(targetFramework.Identifier, VersionUtility.AspNetCoreFrameworkIdentifier, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsAspNet(FrameworkName targetFramework)
+        {
+            return string.Equals(targetFramework.Identifier, VersionUtility.AspNetFrameworkIdentifier, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsCore(FrameworkName targetFramework)
+        {
+            return IsCore45(targetFramework) || IsAspNetCore(targetFramework);
+        }
+
         /// <summary>
         /// This function tries to normalize a string that represents framework version names into
         /// something a framework name that the package manager understands.

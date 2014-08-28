@@ -141,7 +141,7 @@ namespace Microsoft.Framework.PackageManager.Packing
 
         public void PostProcess(PackRoot root)
         {
-            Project project;
+            Runtime.Project project;
             if (!_projectResolver.TryResolveProject(_libraryDescription.Identity.Name, out project))
             {
                 throw new Exception("TODO: unable to resolve project named " + _libraryDescription.Identity.Name);
@@ -222,7 +222,7 @@ root.Configuration));
             }
         }
 
-        private void CopyContentFiles(PackRoot root, Project project, string appFolderName)
+        private void CopyContentFiles(PackRoot root, Runtime.Project project, string appFolderName)
         {
             Console.WriteLine("Copying contents of project dependency {0} to {1}",
                 _libraryDescription.Identity.Name, appFolderName);
