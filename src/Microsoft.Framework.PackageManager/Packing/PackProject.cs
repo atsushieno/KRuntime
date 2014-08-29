@@ -73,22 +73,21 @@ namespace Microsoft.Framework.PackageManager.Packing
             // We can reference source files outside of project root with "code" property in project.json,
             // e.g. { "code" : "..\\ExternalProject\\**.cs" }
             // So we find out external source files and copy them separately
-            var solutionRoot = ProjectResolver.ResolveRootDirectory(project.ProjectDirectory);
-            var projectFileUri = new Uri(project.ProjectFilePath);
+            var rootDirectory = ProjectResolver.ResolveRootDirectory(project.ProjectDirectory);
             foreach (var sourceFile in project.SourceFiles)
             {
                 // This source file is in project root directory. So it was already copied.
-                if (IsChildOfDir(candidate: sourceFile, dir: project.ProjectDirectory))
+                if (PathUtility.IsChildOfDirectory(dir: project.ProjectDirectory, candidate: sourceFile))
                 {
                     continue;
                 }
 
                 // This source file is in solution root but out of project root,
                 // it is an external source file that we should copy here
-                if (IsChildOfDir(candidate: sourceFile, dir: solutionRoot))
+                if (PathUtility.IsChildOfDirectory(dir: rootDirectory, candidate: sourceFile))
                 {
                     // Keep the relativeness between external source files and project root,
-                    var relativeSourcePath = projectFileUri.MakeRelativeUri(new Uri(sourceFile)).ToString();
+                    var relativeSourcePath = PathUtility.GetRelativePath(project.ProjectFilePath, sourceFile);
                     var relativeParentDir = Path.GetDirectoryName(relativeSourcePath);
                     Directory.CreateDirectory(Path.Combine(TargetPath, relativeParentDir));
                     File.Copy(sourceFile, Path.Combine(TargetPath, relativeSourcePath));
@@ -295,20 +294,5 @@ root.Configuration));
             var index2 = (relativePath + Path.AltDirectorySeparatorChar).IndexOf(Path.AltDirectorySeparatorChar);
             return relativePath.Substring(0, Math.Min(index1, index2));
         }
-
-        private static bool IsChildOfDir(string candidate, string dir)
-        {
-            var candidateFullPath = Path.GetFullPath(candidate);
-            var dirFullPath = Path.GetFullPath(dir);
-            if (candidateFullPath.StartsWith(dirFullPath))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
     }
 }
