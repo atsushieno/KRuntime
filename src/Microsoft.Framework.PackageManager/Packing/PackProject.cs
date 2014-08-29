@@ -69,6 +69,36 @@ namespace Microsoft.Framework.PackageManager.Packing
 
                 return true;
             });
+
+            // We can reference source files outside of project root with "code" property in project.json,
+            // e.g. { "code" : "..\\ExternalProject\\**.cs" }
+            // So we find out external source files and copy them separately
+            var solutionRoot = ProjectResolver.ResolveRootDirectory(project.ProjectDirectory);
+            var projectFileUri = new Uri(project.ProjectFilePath);
+            foreach (var sourceFile in project.SourceFiles)
+            {
+                // This source file is in project root directory. So it was already copied.
+                if (IsChildOfDir(candidate: sourceFile, dir: project.ProjectDirectory))
+                {
+                    continue;
+                }
+
+                // This source file is in solution root but out of project root,
+                // it is an external source file that we should copy here
+                if (IsChildOfDir(candidate: sourceFile, dir: solutionRoot))
+                {
+                    // Keep the relativeness between external source files and project root,
+                    var relativeSourcePath = projectFileUri.MakeRelativeUri(new Uri(sourceFile)).ToString();
+                    var relativeParentDir = Path.GetDirectoryName(relativeSourcePath);
+                    Directory.CreateDirectory(Path.Combine(TargetPath, relativeParentDir));
+                    File.Copy(sourceFile, Path.Combine(TargetPath, relativeSourcePath));
+                }
+                else
+                {
+                    Console.WriteLine(
+                        string.Format("TODO: Warning: the referenced source file '{0}' is not in solution root and it is not packed to output.", sourceFile));
+                }
+            }
         }
 
         public void EmitNupkg(PackRoot root)
@@ -264,6 +294,20 @@ root.Configuration));
             var index1 = (relativePath + Path.DirectorySeparatorChar).IndexOf(Path.DirectorySeparatorChar);
             var index2 = (relativePath + Path.AltDirectorySeparatorChar).IndexOf(Path.AltDirectorySeparatorChar);
             return relativePath.Substring(0, Math.Min(index1, index2));
+        }
+
+        private static bool IsChildOfDir(string candidate, string dir)
+        {
+            var candidateFullPath = Path.GetFullPath(candidate);
+            var dirFullPath = Path.GetFullPath(dir);
+            if (candidateFullPath.StartsWith(dirFullPath))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
     }
