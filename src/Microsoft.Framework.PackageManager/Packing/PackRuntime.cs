@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using NuGet;
 
@@ -25,6 +26,11 @@ namespace Microsoft.Framework.PackageManager.Packing
         public string Name { get; set; }
         public SemanticVersion Version { get; set; }
         public string TargetPath { get; set; }
+
+        public FrameworkName FrameworkName
+        {
+            get { return PackManager.DependencyContext.GetFrameworkNameForRuntime(Path.GetFileName(Path.GetDirectoryName(_kreNupkgPath))); }
+        }
 
         public void Emit(PackRoot root)
         {
@@ -64,6 +70,16 @@ namespace Microsoft.Framework.PackageManager.Packing
                 var sha512Bytes = SHA512.Create().ComputeHash(sourceStream);
                 File.WriteAllText(targetNupkgPath + ".sha512", Convert.ToBase64String(sha512Bytes));
             }
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj != null && (obj is PackRuntime) && (TargetPath == (obj as PackRuntime).TargetPath);
+        }
+
+        public override int GetHashCode()
+        {
+            return TargetPath == null ? 0 : TargetPath.GetHashCode();
         }
     }
 }

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Microsoft.Framework.Runtime;
 using Newtonsoft.Json.Linq;
 using NuGet;
@@ -23,7 +22,7 @@ namespace Microsoft.Framework.PackageManager.Packing
             _project = project;
             Projects = new List<PackProject>();
             Packages = new List<PackPackage>();
-            Runtimes = new List<PackRuntime>();
+            Runtimes = new HashSet<PackRuntime>();
             OutputPath = outputPath;
             HostServices = hostServices;
             PackagesPath = Path.Combine(outputPath, AppRootName, "packages");
@@ -37,7 +36,7 @@ namespace Microsoft.Framework.PackageManager.Packing
         public bool NoSource { get; set; }
         public string Configuration { get; set; }
 
-        public IList<PackRuntime> Runtimes { get; set; }
+        public ICollection<PackRuntime> Runtimes { get; set; }
         public IList<PackProject> Projects { get; private set; }
         public IList<PackPackage> Packages { get; private set; }
 

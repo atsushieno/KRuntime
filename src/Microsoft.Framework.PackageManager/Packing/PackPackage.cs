@@ -21,6 +21,7 @@ namespace Microsoft.Framework.PackageManager.Packing
             _libraryDescription = libraryDescription;
         }
 
+        public LibraryDescription LibraryDescription { get { return _libraryDescription; } }
         public Library Library { get { return _libraryDescription.Identity; } }
 
         public string TargetPath { get; private set; }

@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-using Microsoft.Framework.Project;
 using Microsoft.Framework.Runtime;
 using NuGet;
 
@@ -17,6 +16,7 @@ namespace Microsoft.Framework.PackageManager.Packing
     {
         private readonly IServiceProvider _hostServices;
         private readonly PackOptions _options;
+        private readonly PackNativeManager _packNative = new PackNativeManager();
 
         public PackManager(IServiceProvider hostServices, PackOptions options)
         {
@@ -97,7 +97,7 @@ namespace Microsoft.Framework.PackageManager.Packing
 
         public bool Package()
         {
-            if (!ParamsCheck())
+            if (_options.Native && !_packNative.Initialize(_options))
             {
                 return false;
             }
@@ -207,31 +207,10 @@ namespace Microsoft.Framework.PackageManager.Packing
 
             ScriptExecutor.Execute(project, "postpack", getVariable);
 
-            if (_options.Native)
+            if (_options.Native && !_packNative.BuildNatives(root))
             {
-                var runtimeBin = Path.Combine(root.Runtimes.Select(r => r.TargetPath).Distinct().Single(), "bin");
-                // NOTE:
-                // 1. k10 will retire
-                // 2. Eventually we should find a place that we can keep "aspnetcore" as a constant
-                //    We should define a way to identify core lib folders other than hardcoding like this
-                var k10PkgDirs = Directory.EnumerateDirectories(root.PackagesPath, "k10", SearchOption.AllDirectories);
-                var aspnetCoreDirs = Directory.EnumerateDirectories(root.PackagesPath, "aspnetcore*", SearchOption.AllDirectories);
-                var packageDirectories = aspnetCoreDirs.Concat(k10PkgDirs);
-
-                var crossgenOptions = new CrossgenOptions()
-                {
-                    CrossgenPath = Path.Combine(runtimeBin, "crossgen.exe"),
-                    InputPaths = packageDirectories,
-                    RuntimePath = runtimeBin,
-                    Symbols = false
-                };
-
-                var crossgenManager = new CrossgenManager(crossgenOptions);
-                if (!crossgenManager.GenerateNativeImages())
-                {
-                    Console.WriteLine("Native image generation failed.");
-                    return false;
-                }
+                Console.WriteLine("Native image generation failed.");
+                return false;
             }
 
             sw.Stop();
@@ -255,27 +234,6 @@ namespace Microsoft.Framework.PackageManager.Packing
             }
 
             root.Runtimes.Add(new PackRuntime(kreNupkgPath));
-            return true;
-        }
-
-        private bool ParamsCheck()
-        {
-            if (_options.Native)
-            {
-                if (_options.Runtimes.Count() != 1)
-                {
-                    Console.WriteLine("User must provide exactly 1 runtime package when building native images.");
-                    return false;
-                }
-                var runtimePath = _options.Runtimes.Single();
-                var frameworkName = DependencyContext.GetFrameworkNameForRuntime(Path.GetFileName(runtimePath));
-                if (!VersionUtility.IsCore(frameworkName))
-                {
-                    Console.WriteLine("Native image generation is currently only supported for KLR Core flavors.");
-                    return false;
-                }
-            }
-
             return true;
         }
     }
