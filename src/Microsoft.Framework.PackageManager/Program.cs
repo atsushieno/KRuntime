@@ -69,14 +69,7 @@ namespace Microsoft.Framework.PackageManager
                 c.OnExecute(async () =>
                 {
                     var command = new RestoreCommand(_environment);
-                    command.Reports = new Reports()
-                    {
-                        Information = this,
-                        Verbose = optionVerbose.HasValue() ? (this as IReport) : new NullReport()
-                    };
-
-                    // If "--verbose" and "--quiet" are specified together, "--verbose" wins
-                    command.Reports.Quiet = optQuiet.HasValue() ? command.Reports.Verbose : this;
+                    command.Reports = MakeReports(optionVerbose.HasValue(), optQuiet.HasValue());
 
                     command.RestoreDirectory = argRoot.Value;
                     command.Sources = optSource.Values;
@@ -213,6 +206,8 @@ namespace Microsoft.Framework.PackageManager
                     CommandOptionType.SingleValue);
                 var optNoCache = c.Option("--no-cache", "Do not use local cache", CommandOptionType.NoValue);
                 var optPackageFolder = c.Option("--packages", "Path to restore packages", CommandOptionType.SingleValue);
+                var optQuiet = c.Option("--quiet", "Do not show output such as HTTP request/cache information",
+                    CommandOptionType.NoValue);
                 c.HelpOption("-?|-h|--help");
 
                 c.OnExecute(async () =>
@@ -224,11 +219,7 @@ namespace Microsoft.Framework.PackageManager
                     addCmd.ProjectDir = argProject.Value;
 
                     var restoreCmd = new RestoreCommand(_environment);
-                    restoreCmd.Reports = new Reports()
-                    {
-                        Information = this,
-                        Verbose = optionVerbose.HasValue() ? (this as IReport) : new NullReport()
-                    };
+                    restoreCmd.Reports = MakeReports(optionVerbose.HasValue(), optQuiet.HasValue());
 
                     restoreCmd.RestoreDirectory = argProject.Value;
                     restoreCmd.Sources = optSource.Values;
@@ -242,7 +233,7 @@ namespace Microsoft.Framework.PackageManager
                     }
 
                     var installCmd = new InstallCommand(addCmd, restoreCmd);
-                    installCmd.Report = this;
+                    installCmd.Reports = MakeReports(optionVerbose.HasValue(), optQuiet.HasValue());
 
                     var success = await installCmd.ExecuteCommand();
 
@@ -251,6 +242,20 @@ namespace Microsoft.Framework.PackageManager
             });
 
             return app.Execute(args);
+        }
+
+        private Reports MakeReports(bool verbose, bool quiet)
+        {
+            var reports = new Reports()
+            {
+                Information = this,
+                Verbose = verbose ? (this as IReport) : new NullReport()
+            };
+
+            // If "--verbose" and "--quiet" are specified together, "--verbose" wins
+            reports.Quiet = quiet ? reports.Verbose : this;
+
+            return reports;
         }
 
         object _lock = new object();
