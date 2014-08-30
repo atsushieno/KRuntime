@@ -57,7 +57,7 @@ namespace Microsoft.Framework.PackageManager
             {
                 if (new Uri(source.Source).IsFile)
                 {
-                    packageFeeds.Add(new PackageFolder(source.Source, Report));
+                    packageFeeds.Add(new PackageFolder(new LocalPackageRepository(source.Source) { Report = Report }, Report));
                 }
                 else
                 {

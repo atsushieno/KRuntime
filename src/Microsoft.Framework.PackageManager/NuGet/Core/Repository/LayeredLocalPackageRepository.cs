@@ -13,30 +13,30 @@ using NuGet.Resources;
 
 namespace NuGet
 {
-    public class LocalPackageRepository : ILocalPackageRepository
+    public class LayeredLocalPackageRepository : ILocalPackageRepository
     {
         private readonly ConcurrentDictionary<string, PackageCacheEntry> _packageCache = new ConcurrentDictionary<string, PackageCacheEntry>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<PackageName, string> _packagePathLookup = new ConcurrentDictionary<PackageName, string>();
         private readonly bool _enableCaching;
 
-        public LocalPackageRepository(string physicalPath)
+        public LayeredLocalPackageRepository(string physicalPath)
             : this(physicalPath, enableCaching: true)
         {
         }
 
-        public LocalPackageRepository(string physicalPath, bool enableCaching)
+        public LayeredLocalPackageRepository(string physicalPath, bool enableCaching)
             : this(new DefaultPackagePathResolver(physicalPath),
                    new PhysicalFileSystem(physicalPath),
                    enableCaching)
         {
         }
 
-        public LocalPackageRepository(IPackagePathResolver pathResolver, IFileSystem fileSystem)
+        public LayeredLocalPackageRepository(IPackagePathResolver pathResolver, IFileSystem fileSystem)
             : this(pathResolver, fileSystem, enableCaching: true)
         {
         }
 
-        public LocalPackageRepository(IPackagePathResolver pathResolver, IFileSystem fileSystem, bool enableCaching)
+        public LayeredLocalPackageRepository(IPackagePathResolver pathResolver, IFileSystem fileSystem, bool enableCaching)
         {
             if (pathResolver == null)
             {

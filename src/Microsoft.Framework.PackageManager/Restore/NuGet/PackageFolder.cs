@@ -13,16 +13,13 @@ namespace Microsoft.Framework.PackageManager.Restore.NuGet
     public class PackageFolder : IPackageFeed
     {
         private IReport _report;
-        private LocalPackageRepository _repository;
+        private ILocalPackageRepository _repository;
 
         public PackageFolder(
-            string physicalPath,
+            ILocalPackageRepository repository,
             IReport report)
         {
-            _repository = new LocalPackageRepository(physicalPath)
-            {
-                Report = report
-            };
+            _repository = repository;
             _report = report;
         }
 
